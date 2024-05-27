@@ -1,0 +1,106 @@
+---
+title: "Linear_model"
+output: pdf_document
+date: "2024-05-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+```
+
+## Using diamonds as example
+```{r}
+head(diamonds)
+str(diamonds)
+anyNA(diamonds)
+diamonds_no_na <- diamonds[complete.cases(diamonds), ]
+anyDuplicated(diamonds)
+diamonds_unique <- diamonds[!duplicated(diamonds), ]
+```
+
+## Select data for lm
+We want know the linear relationship in carat and price and is it influenced by cut.\
+So cut = ideal and fair selected
+```{r}
+data_ideal <- subset(diamonds, cut == "Ideal")[ , c("carat", "price")]
+data_fair <- subset(diamonds, cut == "Fair")[ , c("carat", "price")]
+head(data_fair)
+```
+
+Firstly caculating the correlation of carat and price in both cut quality\
+
+```{r}
+correlation_ideal <- cor.test(data_ideal$carat,data_ideal$price, use = "complete.obs")
+correlation_fair <- cor.test(data_fair$carat,data_fair$price, use = "complete.obs")
+print(correlation_ideal)
+print(correlation_fair)
+```
+
+Both value greater than 0.85 and it can said that in two different cuts, there is an linear relationship exists.\
+
+## Model building and Evaluation
+```{r}
+model_ideal <- lm(data_ideal$carat ~ data_ideal$price)
+model_fair <- lm(data_fair$carat ~ data_fair$price)
+```
+
+### Evaluate
+
+```{r}
+#For ideal
+par(mfrow = c(1,3))
+hist(residuals((model_ideal),breaks = 5, col = "grey"),
+     main = "Histogram od the residuals", xlab = "residuals", cex = 0.6)
+plot(model_ideal, which= c(1,2), cex = 0.6)
+```
+
+```{r}
+#For fair
+par(mfrow = c(1,3))
+hist(residuals((model_fair),breaks = 5, col = "grey"),
+     main = "Histogram od the residuals", xlab = "residuals", cex = 0.6)
+plot(model_fair, which= c(1,2), cex = 0.6)
+```
+
+Assume it is good enough\
+
+## Visulizaton
+
+#### Only one group
+```{r}
+library(ggplot2)
+p <- ggplot(data_ideal, aes(x = carat, y = price)) 
+p <- p + geom_point()
+p <- p + geom_smooth(method = "lm", se = FALSE)
+print(p)
+```
+
+#### Two group need in one data frame
+
+```{r}
+data_selected <- subset(diamonds, cut == c("Ideal","Fair"))[ , c("carat", "price","cut")]
+p <- ggplot(data_selected, aes(x = carat, y = price, color = cut))
+p <- p + geom_point()
+p <- p + geom_smooth(method = "lm", se = FALSE)
+print(p)
+```
+
+## Calculate Z score
+
+Next, z score is calculated to determine whether the slop of two fitted lines are significantly differently.\
+H0: There is no difference between the two correlation coefficients.\
+H1: There is significant difference between the two correlation coefficients.\
+
+```{r}
+# Extract regression coefficients and standard errors
+beta1 <- summary(model_ideal)$coefficients["data_ideal$price", "Estimate"]
+se_beta1 <- summary(model_ideal)$coefficients["data_ideal$price", "Std. Error"]
+beta2 <- summary(model_fair)$coefficients["data_fair$price", "Estimate"]
+se_beta2 <- summary(model_fair)$coefficients["data_fair$price", "Std. Error"]
+# Calculate z-score
+z <- (beta1 - beta2) / sqrt(se_beta1^2 + se_beta2^2)
+print(z) # badly
+```
+Here, **z is greater than 1.96 (significance level 0.05), indicating a significant difference between the two correlation coefficients, so we reject H0.** This suggests that there is a gender difference in the impact of drug addiction, with males being more affected and having a higher growth rate.
