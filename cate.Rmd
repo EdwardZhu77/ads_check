@@ -1,0 +1,264 @@
+---
+title: "CATEGORICAL"
+output: pdf_document
+date: "2024-05-25"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+```
+
+## Import and organize the data
+
+```{r}
+genotype <- read.csv("genotype.csv")
+head(genotype)
+```
+
+```{r}
+str(genotype)
+```
+
+```{r}
+cross_table <- table(genotype$sex, genotype$genotype)
+print(cross_table)
+```
+
+## Describe the data in a useful way
+
+```{r}
+ggplot(data = genotype, aes(x = genotype, fill = sex)) +
+  geom_bar(position = "dodge") +
+  labs(x = "Genotype", y = "Count", fill = "Sex") +
+  ggtitle("Genotype Distribution by Sex")
+```
+
+### Table 1
+
+|         | $WT$ | $het$ | $mut$ |
+|:-------:|:----:|:-----:|:-----:|
+| Females |  7   |  26   |   5   |
+|  Males  |  10  |  30   |   2   |
+
+## What would you expect under Mendelian inheritance?
+
+In this case, you would expect mice to have males and females as 50/50 and WT, heterozygotes, and mutant mice as 25/50/25.\
+
+### Table 2
+
+|         | $WT$ | $het$ | $mut$ |
+|:-------:|:----:|:-----:|:-----:|
+| Females |  10  |  20   |  10   |
+|  Males  |  10  |  20   |  10   |
+
+#### Choose and justify the appropriate statistical test, state the statistical hypotheses, and carry the test out an appropriate test on whether the mutation affects the survival of mice.
+
+Clearly, it is an expected vs observed distribution. Thus, we need to use the CHI\^2 goodness-of-fit test.\
+
+Assumptions include:\
+
+• The variables must be categorical. – Fits\
+• Observations must be independent. – Can assume from the task. Fits.\
+• Cells in the contingency table are mutually exclusive.– Fits\
+• The expected value of cells should be 5 or greater in at least 80% of cells.– See Table 2. Fits. (may not see Fisher's exact test)
+
+#### State the statistical hypotheses
+
+H0: The data follow the expected distribution (Table 2).\
+HA: The data does not follow the expected distribution (Table 2).\
+
+# Simulation
+
+```{r}
+popu <- c(rep("WT_M", 5000), rep("het_M", 10000), 
+          rep("mut_M", 5000), rep("WT_FM", 5000), 
+          rep("het_FM", 10000), rep("mut_FM", 5000))
+
+chi <- function(){
+  sam <- sample(popu, 80, replace = FALSE)
+  n_WT <- length(which(sam == "WT_M"))
+  n_het <- length(which(sam == "het_M"))
+  n_mut <- length(which(sam == "mut_M"))
+  n_WT_F <- length(which(sam == "WT_FM"))
+  n_het_F <- length(which(sam == "het_FM"))
+  n_mut_F <- length(which(sam == "mut_FM"))
+  X2 <- (n_WT-10)^2/10 + (n_het-20)^2/20 + 
+    (n_mut-10)^2/10 + (n_WT_F-10)^2/10 + 
+    (n_het_F-20)^2/20 + (n_mut_F-10)^2/10 
+  return(X2)
+}
+chi_sti <- replicate(10000, chi())
+Obs <- c(7,20,5,10,30,2)
+chi_survey <- sum((7-10)^2/10 + (20-20)^2/20 + (5-10)^2/10 +
+                  (10-10)^2/10 + (30-20)^2/20 + (2-10)^2/10)
+p.val <- length(which(chi_sti >= chi_survey)) / 10000
+plot(density(chi_sti), main = "Simulations of Chi-Square Statistic", xlab = "Chi-Square Value")
+abline(v = chi_survey, col = "red") 
+print(p.val)
+#mock 
+chisq.test(Obs, simulate.p.value = TRUE, p = c(0.125, 0.25, 0.125, 0.125, 0.25, 0.125))
+```
+
+
+
+# Carry test out an appropriate test
+
+As we need to run CHI\^2for goodness-of-fit, we need to provide the expected values. In chisq.test(), we can do that by providing a matrix of expected probabilities under the p argument.\
+
+## Table 3: The expected probabilities
+
+|         | $WT$  | $het$ | $mut$ |
+|:-------:|:-----:|:-----:|:-----:|
+| Females | 0.125 | 0.25  | 0.125 |
+|  Males  | 0.125 | 0.25  | 0.125 |
+
+### Use all the data for chi goodness fit
+
+```{r}
+observed <- c(26, 5, 7, 30, 2, 10)  #directly 1-d OK!!
+expected <- c(0.25, 0.125, 0.125, 0.25, 0.125, 0.125)
+test_result <- chisq.test(observed, p = expected)
+print(test_result)
+```
+
+### Most easy version
+
+```{r}
+tulip <- c(81, 50, 27)
+res <- chisq.test(tulip, p = c(1/2, 1/3, 1/6))
+res
+res$p.value
+```
+
+p-value = 0.005324 \< 0.05, we can reject H0 now.\
+Thus, the distribution of sex and genotype deviates from the one under Mendelian inheritance law. The mutation did affects the survival of mice.\
+
+Chi-square test of independence:the null hypothesis is that two variables (criteria of classifications defined for the same population) are independent, so the distribution of one of them in no way depends on the distribution of the other.\
+Chi-square test of homogeneity:this test is a generalization of the Z/ t test for the difference between two population proportions. It can be used to test the null hypothesis that several population proportions. It can be used to test the null hypothesis that several populations are homogeneous in the sense that categories of a single qualitative variable, or class intervals of a single quantitative variable, have the same distribution in these populations.\
+Similarly to the chi-square test of independence, the chi-square test of homogeneity is also based on a contingency table, and the two tests have the same test statistic. However, the two tests differ in terms of the underlying rationale. in the test of independence the expected (joint) frequencies are based on the multiplication rule for independent events, while in the test of homogeneity they are calculated from the pooled sample.\
+
+# Chi-square test of homogeneity
+
+##### Question: Is there a difference between the distribution of the allergic reaction and the preferred seasons?
+
+Assumptions include:\
+
+• The variables must be categorical. – Fits\
+• Observations must be independent. – Can assume from the task. Fits.\
+• Cells in the contingency table are mutually exclusive.– Fits\
+• The expected value of cells should be 5 or greater in at least 80% of cells.– See Table 2. Fits.(may not see Fisher's exact test)\
+
+#### State the statistical hypotheses
+
+H0: The distribution of allergic reactions is the same for the people who preferred different seasons.\
+HA: The distribution of allergic reactions is $not$ the same for the people who preferred different seasons.\
+
+## Table 4: The allergic reaction and the preferred seasons
+
+| Category | Spring | Summer | Fall | Winter |
+|:--------:|:------:|:------:|:----:|:------:|
+|  Severe  |   5    |   1    |  1   |   9    |
+|   Mild   |   8    |   5    |  2   |   5    |
+| Sporadic |   9    |   8    |  3   |   9    |
+|  Never   |   18   |   16   |  12  |   5    |
+
+```{r}
+Severe <- data.frame(Spring = 5, Summer = 1, Fall = 1, Winter = 9)
+Mild <- data.frame(Spring = 8, Summer = 5, Fall = 2, Winter = 5)
+Sporadic <- data.frame(Spring = 9, Summer = 8, Fall = 3, Winter = 9)
+Never <- data.frame(Spring = 18, Summer = 16, Fall = 12, Winter = 5)
+Two_categories <- rbind(Severe,Mild,Sporadic,Never)
+chisq.test(Two_categories)# NOTHING IS IN THE LEFTEST COLOMN
+
+#try fisher.test for better convincing
+fisher.test(Two_categories,workspace = 2e7)
+
+Two_categories <- Two_categories %>%
+  mutate(Category = c("Severe","Mild","Sporadic","Never"))
+
+
+Two_categories_long <- Two_categories %>%
+  pivot_longer(cols = c(Spring, Summer, Fall, Winter),
+               names_to = "Season", values_to = "Count")
+# Bubble Plot
+ggplot(Two_categories_long, aes(x = Season, y = Category, size = Count, color = Season)) +
+  geom_point(alpha = 0.7) +
+  labs(title = "Bubble Plot", x = "Season", y = "Category",
+       size = "Count") 
+
+```
+
+# Chi-square test of independence
+
+##### Question: Does geneX affect lifespan of mice?
+
+H0: The lifespan is independent on genX H1: The lifespan is dependent on genX
+
+## Table 5:Observed data
+
+|       | WT  | KO  | Total |
+|:-----:|:---:|:---:|:-----:|
+| Alive |  7  |  2  |   9   |
+| Dead  |  3  |  7  |  10   |
+| Total | 10  |  9  |  19   |
+
+## Table 6:Expected data
+
+|       | WT  | KO  |
+|:-----:|:---:|:---:|
+| Alive | 4.7 | 4.3 |
+| Dead  | 5.3 | 4.7 |
+
+```{r}
+## Fisher (1962, 1970), Criminal convictions of like-sex twins
+Convictions <- matrix(c(2, 10, 15, 3), nrow = 2,
+	              dimnames =
+	       list(c("Dizygotic", "Monozygotic"),
+		    c("Convicted", "Not convicted")))
+Convictions
+fisher.test(Convictions, alternative = "less")
+fisher.test(Convictions, conf.int = FALSE)
+fisher.test(Convictions, conf.level = 0.95)$conf.int
+fisher.test(Convictions, conf.level = 0.99)$conf.int
+
+## A r x c table  Agresti (2002, p. 57) Job Satisfaction
+Job <- matrix(c(1,2,1,0, 3,3,6,1, 10,10,14,9, 6,7,12,11), 4, 4,
+           dimnames = list(income = c("< 15k", "15-25k", "25-40k", "> 40k"),
+                     satisfaction = c("VeryD", "LittleD", "ModerateS", "VeryS")))
+fisher.test(Job) # 0.7827
+fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
+
+```
+
+# Chi-square test of independence
+
+#### input the data into array
+
+## Table 7
+
+#### Hard to drad a three key table
+
+|       |  WT  |   WT   |  KO  |   KO   |
+|:-----:|:----:|:------:|:----:|:------:|
+|       | Male | Female | Male | Female |
+| Alive |  40  |   34   |  20  |   25   |
+| Dead  |  9   |   7    |  15  |   20   |
+
+```{r}
+mouse_data <- array(c(40, 9, 34, 7, 20, 15, 25, 20), dim = c(2, 2, 2))
+dname <- list(status = c("Alive", "Dead"),
+sex = c("Male", "Female"),
+Genotype = c("WT", "KO"))
+dimnames(mouse_data) <- dname
+mouse_data#Divide into two smaller table
+```
+
+Apply the chi-square test. Note: You cannot use an 3-dimensional object in the chisq.test(). Convert the
+array to a table object and find the chi-square test result in the summary of the object. Your result should
+match the one in the lecture.\
+```{r}
+mouse_data <- as.table(mouse_data)
+summary(mouse_data)
+```
