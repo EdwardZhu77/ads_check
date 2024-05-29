@@ -182,6 +182,9 @@ Two_categories <- Two_categories %>%
 Two_categories_long <- Two_categories %>%
   pivot_longer(cols = c(Spring, Summer, Fall, Winter),
                names_to = "Season", values_to = "Count")
+print(Two_categories_long)##Format for bubble
+
+
 # Bubble Plot
 ggplot(Two_categories_long, aes(x = Season, y = Category, size = Count, color = Season)) +
   geom_point(alpha = 0.7) +
@@ -232,7 +235,7 @@ fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
 
 ```
 
-# Chi-square test of independence
+# Three way Chi-square test 
 
 #### input the data into array
 
@@ -297,3 +300,9 @@ HA: There $is$ no interaction among the three factors, implying that genotype, a
 By organizing the data into a three-dimensional table, we conducted a three-way chi-square test to compare observed values with expected values, determining whether there is an interaction among genotype, sex, and status. The chi-square test results include the chi-square statistic and its corresponding p-value. If the p-value is less than a pre-set significance level (typically 0.05), we reject the null hypothesis, suggesting that there is an interaction among the factors.\
 
 Through a statistical summary, we obtained the results of the three-way chi-square test, allowing us to determine whether we reject the null hypothesis and whether genotype, sex, and status have an interaction effect on survival rate.\
+
+
+
+
+
+
