@@ -1,0 +1,238 @@
+---
+title: "ADS2 Mock Coding Challenge 2"
+date: "Semester 2, 2023-24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+```
+
+# 1. Vitamin C and tooth growth
+
+Lack of vitamin C leads to severe health issues. It is not produced in the human body and must be supplied with food. At the same time, personnel that have limited access to fresh vegetables (sailors, spacemen, travelers, etc) may suffer from the insufficiency of this compound in their food. Thus, a vitamin C formulation that can preserve its properties for a long time is of great need.
+
+Researchers developed such a formulation. *In vitro* tests showed its efficiency. Now, they performed an *in vivo* trial. Guinea pigs received the newly developed formulation of Vitamin C or fresh orange juice (normalized according to the concentration of vitamin C) in addition to their standard diet (`supp`). Each type of additives included three concentrations (`dose`) of vitamin C: 0.5, 1, and 2 mg/ml. The measured outcome is the tooth length (`len`) in mm (stem cells that become teeth are sensitive to vitamin C).
+
+## Import, check, and organize the data appropriately. Reformat columns if needed.
+
+```{r}
+teeth <- read.csv("teeth.csv")
+head(teeth)
+anyNA(teeth)
+anyDuplicated(teeth)
+```
+
+Apparently, supp and dose must be grouping variables. It is reasonable to recode them and change their order. You can also check which values are in each column to make sure that there are no weird values like "" or similar.
+
+```{r}
+teeth <- teeth %>%
+mutate(dose = factor(dose, levels = c(0.5, 1, 2), ordered = T),
+supp = as.factor(supp)) %>%
+relocate(supp, dose)
+str(teeth)
+head(teeth)
+```
+
+## Plot the data in a useful way.
+
+```{r}
+p.box <- ggplot(teeth) + geom_boxplot(aes(x=dose, y=len, fill = supp))
+p.box
+```
+
+## Choose, justify, state the statistical hypotheses, and carry out an appropriate test to answer whether the vitamin C formula is useful.
+
+### Choose the appropriate test
+
+#### One way annova can be simulated
+
+We have 2 levels of supp × 3 levels of dose = 6 groups. It means we need to use ANOVA. As we have 2 factors, we should try to use a 2-way ANOVA if the data fit the requirements. Thus, the method of choice is a 2-way ANOVA or (if cannot run it) the Kruskal-Wallis test.\
+
+-   is for model with interaction;\
+-   is for model without interaction;\
+
+```{r}
+model <- aov(len ~ supp + dose + supp:dose, data = teeth)
+```
+
+### Justify your test choice
+
+Assumptions for a 2-way ANOVA test are:\
+
+#### 1. Independence of observations.
+
+• We can assume it at once.\
+
+#### 2. Normality of residuals:
+
+```{r}
+hist(resid(model), main = "residuals") 
+shapiro.test(resid(model))
+plot(model, 2)
+```
+
+Based on the histogram, we cannot deny that the data do not obey a normal distribution. However, based on the p-value of the Shapiro test, we can believe that the residuals obey a normal distribution.\
+
+### 3. Equality of variance:
+
+```{r}
+plot(model, 1)
+```
+
+The plot indicates that the variances are approximately equal across groups, which meets the assumption for using the ANOVA test.\
+
+#### 4. Equal group size (have to use different types of SS calculation for the ANOVA table if this requirement is violated):
+
+• The group size can be noticed in the data diagnosis step\
+
+The first plot shows the distance of residuals from the mean (is comparable across groups) and the second one shows residuals according to the normal distribution (close to the expected values)\
+
+#### We can use parametric ANOVA.
+
+#### State the statistical hypotheses
+
+• H0: means of different supp groups are the same\
+• H1: means of different supp groups are NOT the same\
+
+### Carry out an appropriate test to answer whether the vitamin C formula is useful.
+
+#### Annova test
+
+```{r}
+summary(model)
+```
+
+#### Post-hoc tests
+
+```{r}
+TukeyHSD(model)
+```
+
+## Present and discuss your results. Is this novel formula useful? What would you suggest doing next?
+
+The ANOVA results indicate significant effects of both the 'supp' factor (F = 15.473, p \< 0.001) and the 'dose' factor (F = 91.965, p \< 0.001) on the 'len' variable. Additionally, there is a significant interaction between 'supp' and 'dose' (F = 4.015, p = 0.024), suggesting that the effect of one factor depends on the levels of the other factor. The residuals represent unexplained variance in the model, which is relatively low (Residuals: Mean Sq = 2.15).\
+The Post-hoc test result shows:  • the new formulation is generally inferior to the fresh orange juice (\~ 3.7 mm, p \< 0.001);\
+• lower doses are worse than higher doses (\~ 15.5 mm difference between the highest and the lowest concentration of the supplement, p \< 0.001);\
+• at the highest dose, the new formulation is as good as the fresh orange juice (p = 1).\
+Altogether, the formula can be used to substitute natural dietary vitamin C, but only at a high dose.\
+
+## What would you suggest doing next?
+
+Still, the effect of each supplementation is a bit unclear due to the lack of the non-treated group.\
+The addition of the one would be cumbersome as we would have to give up the factorial design. It would be possible to either add a non-treated group and normalize all the other values to it or add a dose group with very low concentration.\
+As the formula is functional, it is possible to run some toxicological tests, test the long-term efficiency, and go for clinical trials. It may be possible to optimize the formula further, as the response is lower than that of the fresh juice at lower doses.\
+
+Possibly, more work can be spent on the bioavailability of vitamin C in the formula. But do not boldly write: “Let’s increase the sample size”. What will you see if the sample size is higher? What will you do with the even lower p-value? Think about it. If you still decide to ask for the one, you need to explain why you would like to do that, what you would like to see, and how much you want to increase the sample size.\
+
+# Apart from the two way annova
+
+## Simulation and one way annova
+```{r}
+one_way <- data.frame(
+  group = rep(c("A", "B", "C"), each = 20),  
+  value = c(rnorm(20, mean = 10, sd = 2),    
+            rnorm(20, mean = 12, sd = 2),    
+            rnorm(20, mean = 15, sd = 2))
+)
+```
+
+```{r}
+anova_result <- aov(value ~ group, data = one_way)
+summary(anova_result)
+```
+
+### Justify your test choice
+Assumptions for a 2-way ANOVA test are:\
+
+#### 1. Independence of observations.
+
+• We can assume it at once.\
+
+#### 2. Normality of residuals:
+
+```{r}
+hist(resid(anova_result), main = "residuals") 
+shapiro.test(resid(anova_result))
+plot(anova_result, 2)
+```
+
+Based on the histogram, we cannot deny that the data do not obey a normal distribution. However, based on the p-value of the Shapiro test, we can believe that the residuals obey a normal distribution.\
+
+### 3. Equality of variance:
+
+```{r}
+plot(anova_result, 1)
+```
+
+The plot indicates that the variances are approximately equal across groups, which meets the assumption for using the ANOVA test.\
+
+#### 4. Equal group size (have to use different types of SS calculation for the ANOVA table if this requirement is violated):
+
+• The group size can be noticed in the data diagnosis step\
+
+The first plot shows the distance of residuals from the mean (is comparable across groups) and the second one shows residuals according to the normal distribution (close to the expected values)\
+
+#### We can use parametric ANOVA.
+```{r}
+TukeyHSD(anova_result)
+```
+
+## Not suitable for the annova
+
+```{r}
+non_normal_data <- data.frame(
+  group = rep(c("A", "B", "C"), each = 20),  
+  value = c(runif(20, min = 5, max = 15),     
+            runif(20, min = 8, max = 18),    
+            runif(20, min = 10, max = 20)) 
+)
+```
+
+```{r}
+anova_result_2 <- aov(value ~ group, data = non_normal_data)
+```
+
+### Justify your test choice
+Assumptions for a 2-way ANOVA test are:\
+
+#### 1. Independence of observations.
+
+• We can assume it at once.\
+
+#### 2. Normality of residuals:
+
+```{r}
+hist(resid(anova_result_2), main = "residuals") 
+shapiro.test(resid(anova_result_2))
+plot(anova_result_2, 2)
+```
+
+Based on the histogram, we cannot deny that the data do not obey a normal distribution. However, based on the p-value of the Shapiro test, we can believe that the residuals obey a normal distribution.\
+
+### 3. Equality of variance:
+
+```{r}
+plot(anova_result_2, 1)
+```
+
+
+```{r}
+kruskal_result <- kruskal.test(value ~ group, data = non_normal_data)
+print(kruskal_result)
+```
+The dependent variable should be on an ordinal scale, a ratio scale, or an interval scale.\
+The observations should be independent. In other words, there should be no correlation between members of each group or between members of a group.\
+All groups should have the same shape distribution.\
+
+```{r}
+kruskal.test(value ~ group, data = non_normal_data)$posthoc
+
+```
+
+
+
+
+
