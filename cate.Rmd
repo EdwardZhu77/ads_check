@@ -253,6 +253,32 @@ sex = c("Male", "Female"),
 Genotype = c("WT", "KO"))
 dimnames(mouse_data) <- dname
 mouse_data#Divide into two smaller table
+
+##Visulize two photos
+mouse_data_WT <- data.frame(Status = c("Alive","Dead"),
+                            Male = c(40, 9),
+                            Female = c(34, 7))
+mouse_data_WT_long <- mouse_data_WT %>%
+  pivot_longer(cols = c(Male,Female),
+               names_to = "Sex", values_to = "Count")
+print(mouse_data_WT_long)
+ggplot(mouse_data_WT_long, aes(x = Sex, y = Status, size = Count, color = Sex)) +
+  geom_point(alpha = 0.7) +
+  labs(title = "Bubble Plot of WT", x = "Sex", y = "Status",
+       size = "Count")
+
+## 3 way how to convert visulization
+
+mouse_table <- as.table(mouse_data)
+mouse_df <- as.data.frame(mouse_table)
+colnames(mouse_df) <- c("status", "sex", "Genotype", "value")
+print(mouse_df)
+
+ggplot(mouse_df, aes(x = Genotype, y = value, fill = status)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~sex) +
+  labs(x = "Genotype", y = "Count", fill = "Status") +
+  theme_minimal()
 ```
 
 Apply the chi-square test. Note: You cannot use an 3-dimensional object in the chisq.test(). Convert the
@@ -262,3 +288,12 @@ match the one in the lecture.\
 mouse_data <- as.table(mouse_data)
 summary(mouse_data)
 ```
+
+In this analysis, we utilized a three-way chi-square test to assess the relationship between genotype (WT and KO), sex (Male and Female), and status (Alive and Dead).\
+
+H0: There is no interaction among the three factors, implying that genotype, and sex do not affect survival status.\
+HA: There $is$ no interaction among the three factors, implying that genotype, and sex do not affect survival status, indicating that at least one factor influences survival rate.\
+
+By organizing the data into a three-dimensional table, we conducted a three-way chi-square test to compare observed values with expected values, determining whether there is an interaction among genotype, sex, and status. The chi-square test results include the chi-square statistic and its corresponding p-value. If the p-value is less than a pre-set significance level (typically 0.05), we reject the null hypothesis, suggesting that there is an interaction among the factors.\
+
+Through a statistical summary, we obtained the results of the three-way chi-square test, allowing us to determine whether we reject the null hypothesis and whether genotype, sex, and status have an interaction effect on survival rate.\
