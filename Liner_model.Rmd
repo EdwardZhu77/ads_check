@@ -15,7 +15,7 @@ library(tidyverse)
 head(diamonds)
 str(diamonds)
 anyNA(diamonds)
-diamonds_no_na <- diamonds[complete.cases(diamonds), ]
+diamonds_no_na <- na.omit(diamonds)
 anyDuplicated(diamonds)
 diamonds_unique <- diamonds[!duplicated(diamonds), ]
 ```
@@ -64,7 +64,11 @@ hist(residuals((model_fair),breaks = 5, col = "grey"),
 plot(model_fair, which= c(1,2), cex = 0.6)
 ```
 
-Assume it is good enough\
+Normality: The histogram of the residuals is bell-shaped and the points on the Q-Q plot are distributed roughly along the 45-degree diagonal, indicating that the residuals are approximately normally distributed.\
+
+Independence and homoscedasticity: The plots of fitted values and residuals show that there is no clear pattern or correlation between the residuals, and that the residuals are uniformly distributed above and below the zero line.\
+
+Linearity: The absence of curvilinear trends in the plots of fitted values versus residuals indicates that the model captures a linear relationship in the data.\
 
 ## Visulizaton
 
@@ -96,6 +100,9 @@ H1: There is significant difference between the two correlation coefficients.\
 ```{r}
 # Extract regression coefficients and standard errors
 beta1 <- summary(model_ideal)$coefficients["data_ideal$price", "Estimate"]
+
+## price is x intercept is 0.33
+
 se_beta1 <- summary(model_ideal)$coefficients["data_ideal$price", "Std. Error"]
 beta2 <- summary(model_fair)$coefficients["data_fair$price", "Estimate"]
 se_beta2 <- summary(model_fair)$coefficients["data_fair$price", "Std. Error"]
