@@ -24,6 +24,9 @@ str(genotype)
 ```{r}
 cross_table <- table(genotype$sex, genotype$genotype)
 print(cross_table)
+num_1 <- genotype %>% 
+  filter(sex == "female" & genotype == "het") %>% 
+  nrow()
 ```
 
 ## Describe the data in a useful way
@@ -55,7 +58,7 @@ In this case, you would expect mice to have males and females as 50/50 and WT, h
 
 #### Choose and justify the appropriate statistical test, state the statistical hypotheses, and carry the test out an appropriate test on whether the mutation affects the survival of mice.
 
-Clearly, it is an expected vs observed distribution. Thus, we need to use the CHI\^2 goodness-of-fit test.\
+Clearly, it is an expected vs observed distribution. Thus, we need to use the $\chi^2$ goodness-of-fit test.\
 
 Assumptions include:\
 
@@ -101,11 +104,9 @@ print(p.val)
 chisq.test(Obs, simulate.p.value = TRUE, p = c(0.125, 0.25, 0.125, 0.125, 0.25, 0.125))
 ```
 
-
-
 # Carry test out an appropriate test
 
-As we need to run CHI\^2for goodness-of-fit, we need to provide the expected values. In chisq.test(), we can do that by providing a matrix of expected probabilities under the p argument.\
+As we need to run $\chi^2$ for goodness-of-fit, we need to provide the expected values. In chisq.test(), we can do that by providing a matrix of expected probabilities under the p argument.\
 
 ## Table 3: The expected probabilities
 
@@ -197,7 +198,8 @@ ggplot(Two_categories_long, aes(x = Season, y = Category, size = Count, color = 
 
 ##### Question: Does geneX affect lifespan of mice?
 
-H0: The lifespan is independent on genX H1: The lifespan is dependent on genX
+H0: The lifespan is independent on genX\
+H1: The lifespan is dependent on genX\
 
 ## Table 5:Observed data
 
@@ -235,7 +237,7 @@ fisher.test(Job, simulate.p.value = TRUE, B = 1e5) # also close to 0.78
 
 ```
 
-# Three way Chi-square test 
+# Three way Chi-square test
 
 #### input the data into array
 
@@ -284,9 +286,8 @@ ggplot(mouse_df, aes(x = Genotype, y = value, fill = status)) +
   theme_minimal()
 ```
 
-Apply the chi-square test. Note: You cannot use an 3-dimensional object in the chisq.test(). Convert the
-array to a table object and find the chi-square test result in the summary of the object. Your result should
-match the one in the lecture.\
+Apply the chi-square test. Note: You cannot use an 3-dimensional object in the chisq.test(). Convert the array to a table object and find the chi-square test result in the summary of the object. Your result should match the one in the lecture.\
+
 ```{r}
 mouse_data <- as.table(mouse_data)
 summary(mouse_data)
@@ -300,9 +301,3 @@ HA: There $is$ no interaction among the three factors, implying that genotype, a
 By organizing the data into a three-dimensional table, we conducted a three-way chi-square test to compare observed values with expected values, determining whether there is an interaction among genotype, sex, and status. The chi-square test results include the chi-square statistic and its corresponding p-value. If the p-value is less than a pre-set significance level (typically 0.05), we reject the null hypothesis, suggesting that there is an interaction among the factors.\
 
 Through a statistical summary, we obtained the results of the three-way chi-square test, allowing us to determine whether we reject the null hypothesis and whether genotype, sex, and status have an interaction effect on survival rate.\
-
-
-
-
-
-
