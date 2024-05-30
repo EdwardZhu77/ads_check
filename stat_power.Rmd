@@ -56,4 +56,6 @@ prob<-matrix(c(.42,.28,.03,.07,.10,.10),byrow=TRUE,nrow=3)
 library(pwr)
 ES.w2(prob) #Effect size
 pwr.chisq.test(w=.1853,df=2,sig.level=.05,power=.9) 
+pwr.chisq.test(w=.1853,df=2,sig.level=.05,N = 100)
+# N = Total number of observation
 ```
