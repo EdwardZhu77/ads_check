@@ -230,6 +230,8 @@ All groups should have the same shape distribution.\
 ```{r}
 kruskal.test(value ~ group, data = non_normal_data)$posthoc
 
+library(pwr)
+pwr.anova.test(k=4,f=.25,sig.level=.05,power=.8)## one way annova power test
 ```
 
 
