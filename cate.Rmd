@@ -294,7 +294,8 @@ summary(mouse_data)
 ```
 
 In this analysis, we utilized a three-way chi-square test to assess the relationship between genotype (WT and KO), sex (Male and Female), and status (Alive and Dead).\
-
+Is geneX, sex and lifespan independent of each other?\
+There is interdependency among geneX, sex and lifespan in mice at 1 year\
 H0: There is no interaction among the three factors, implying that genotype, and sex do not affect survival status.\
 HA: There $is$ no interaction among the three factors, implying that genotype, and sex do not affect survival status, indicating that at least one factor influences survival rate.\
 
