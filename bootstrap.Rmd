@@ -1,0 +1,143 @@
+---
+title: "bootstrap"
+output: pdf_document
+date: "2024-05-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+normal_samples <- rnorm(100, mean = 4, sd = 2)
+
+# Plotting the histogram of normally distributed random numbers
+hist(normal_samples, main = "Histogram of Normally Distributed Random Numbers",
+     xlab = "Value", ylab = "Frequency", col = "lightblue", border = "black")
+
+# Uniformly distributed random numbers
+set.seed(123)  # Setting seed for reproducibility
+uniform_samples <- runif(100, min = 0, max = 10)
+
+# Plotting the histogram of uniformly distributed random numbers
+hist(uniform_samples, main = "Histogram of Uniformly Distributed Random Numbers",
+     xlab = "Value", ylab = "Frequency", col = "lightgreen", border = "black")
+```
+
+$P(X \leq z)$。
+
+```{r}
+cumulative_prob_at_one <- pnorm(1, mean = 0, sd = 1)
+print(cumulative_prob_at_one)
+
+
+#prob_b <- pnorm(b, mean = mean, sd = sd)
+#prob_a <- pnorm(a, mean = mean, sd = sd)
+#prob_between_a_and_b <- prob_b - prob_a
+#print(prob_between_a_and_b)
+
+quantile_at_95 <- qnorm(0.95, mean = 0, sd = 1)
+print(quantile_at_95)
+```
+### What would be a suitable statistical test for these data and why?
+
+These data are categorical but seriously lacking in independence. Students may have been customers more
+than once and, similarly, there are likely to be students who were customers in both trials. The two categories
+are therefore not exclusive either.\
+• Chi-squared or Fisher’s exact test would be inappropriate\
+• Bootstrapping is the only possible alternative to take account of these complications\
+
+##  What are your null and alternative hypotheses? (4 points)
+
+• Null hypothesis: there is no difference between the proportion of students who are satisfied with an
+early or late opening time\
+• Alternative hypothesis: there is a difference between the proportion of students or students prefer a
+late opening time (this would be the equivalent of a one-tailed test)\
+
+```{r}
+bootstrap_house_proportion <- function(data, category, num_samples = 1000) {
+  # 初始化列表以存储所有重复实验的比例结果
+  proportions <- vector("numeric", length = num_samples)
+  
+  # 进行 num_samples 次有放回的重采样
+  for (i in 1:num_samples) {
+    sample_data <- sample(data, size = length(data), replace = TRUE)
+    category_count <- length(subset(sample_data, sample_data == category))
+    proportion <- category_count / length(data)
+    proportions[i] <- proportion
+  }
+  
+  # 计算类别数量的 2.5% 和 97.5% 分位数（即置信区间）
+  ci <- quantile(proportions, probs = c(0.025, 0.975))
+  
+  # 将置信区间的下限和上限分别除以样本总数，得到类别比例的置信区间
+  lower_bound <- ci[1]
+  upper_bound <- ci[2]
+  cat("95% Confidence Interval for Proportion of", category, ":", lower_bound, "-", upper_bound, "\n")
+  
+  return(proportions)
+}
+
+data_1 <- c(rep("satisfied", 864), rep("unsatisfied", 714))
+data_2 <- c(rep("satisfied", 980), rep("unsatisfied", 473))
+
+# 使用 Bootstrap 函数获取1000次重复实验中 "satisfied" 的比例结果的列表
+bootstrap_result_1 <- bootstrap_house_proportion(data_1, "satisfied")
+bootstrap_result_2 <- bootstrap_house_proportion(data_2, "satisfied")
+
+# 打印前几个结果查看
+print(head(bootstrap_result_1))
+print(head(bootstrap_result_2))
+
+result_bootstrap <- data.frame(result_1 = bootstrap_result_1,
+                               result_2 = bootstrap_result_2)
+result_bootstrap <- result_bootstrap %>%
+  pivot_longer(cols = c("result_1","result_2"),
+               names_to = "Group",
+               values_to = "Result")
+result_bootstrap$group <- as.factor(result_bootstrap$Group)
+ggplot(data = result_bootstrap,
+       mapping = aes(x = Group, y = Result, color = Group))+
+  geom_boxplot()
+```
+
+
+
+
+
+
+# 例子
+```{r}
+# 定义 Bootstrap 函数
+bootstrap_house_proportion <- function(data, category, num_samples = 1000) {
+  # 初始化向量以存储每次重采样中指定类别的数量
+  category_counts <- vector()
+  
+  # 进行 num_samples 次有放回的重采样
+  for (i in 1:num_samples) {
+    sample_data <- sample(data, size = length(data), replace = TRUE)
+    category_count <- length(subset(sample_data, sample_data == category))
+    category_counts <- c(category_counts, category_count)
+  }
+  
+  # 计算类别数量的 2.5% 和 97.5% 分位数（即置信区间）
+  ci <- quantile(category_counts, probs = c(0.025, 0.975))
+  
+  # 将置信区间的下限和上限分别除以样本总数，得到类别比例的置信区间
+  lower_bound <- ci[1] / length(data)
+  upper_bound <- ci[2] / length(data)
+  
+  return(list(mean = mean(category_counts) / length(data), 
+              lower = lower_bound, 
+              upper = upper_bound))
+}
+
+# 示例数据
+noncoding <- c(rep("house", 21), rep("other", 292))
+
+# 使用 Bootstrap 函数计算 "house" 的比例置信区间
+bootstrap_result <- bootstrap_house_proportion(noncoding, "house")
+print(bootstrap_result)
+```
+
+
