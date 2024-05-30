@@ -1,0 +1,68 @@
+---
+title: "Beyesian"
+output: pdf_document
+date: "2024-05-29"
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem Description
+
+You are studying turtles on an island with two beaches. The turtle
+populations on each beach are as follows:\
+
+On West Beach:\
+90% of turtles are Green Sea Turtles\
+10% of turtles are Loggerhead Sea Turtles\
+On East Beach:\
+60% of turtles are Green Sea Turtles\
+40% of turtles are Loggerhead Sea Turtles\
+
+While walking on a foggy day, you get lost and end up on one of the
+beaches, but you can't tell which one it is due to the fog. You find a
+turtle and identify it as a Loggerhead Turtle. The question is: What is
+the probability that you are on East Beach?\
+
+## Bayes' Theorem
+
+To solve this problem, we can use Bayes' Theorem, which helps us find
+the probability of an event given prior knowledge of conditions that
+might be related to the event.\
+
+The formula for Bayes' Theorem is: $P(A|B) = \frac{P(B|A)P(A)}{P(B)}$
+
+In this case Where:
+
+$P(East)$ is the prior probability that I am in the *East bench*.\
+$P(East|Loggerhead)$ is the posterior probability of being on *East
+bench* that I have found a logger head turtle.\
+$P(Loggerhead|East)$ is the conditional probability of I have found a
+logger head turtle and then being on *East bench*.\
+$P(Loggerhead)$ is the Overall Probability to found a turtle in the
+island.\
+
+From the question, we could know:\
+
+|                      | $East$ | $West$ |
+|:--------------------:|:------:|:------:|
+| $P(East|Loggerhead)$ |   7    |   26   |
+| $P(East|Loggerhead)$ |   10   |   30   |
+
+$P(East|Loggerhead)= 0.6$ and $P(West|Loggerhead)= 0.1$\
+
+so based on the overall Probability equation we could know that\
+
+$P(Loggerhead)=P(East|Loggerhead)P(East) + P(West|Loggerhead)P(West)$
+
+# Joint probability
+
+$\frac{P(East,Loggerhead)}{P(Loggerhead)} = P(East|Loggerhead)$
+
+# Bayes Factor
+
+$BF10 = \frac{P(East|Loggerhead)}{P(East|Green)}$
