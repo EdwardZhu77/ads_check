@@ -1,0 +1,69 @@
+---
+title: "data_clean"
+output: pdf_document
+date: "2024-05-27"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## what is a clean data
+```{r}
+head(diamonds)
+head(iris)
+```
+### Merge and any NA duplicated
+```{r}
+df1 <- data.frame(ID = c(1, 2, 3, 4, 5), 
+                  length = c(5.1, 4.9, 4.7, 4.6, 5.0))
+df2 <- data.frame(ID = c(1, 3, 5, 7, 9), 
+                  name = c("name1", "name2", "name3", "name4", "name5"))
+data_merged <- merge(df1, df2, by = "ID")
+print(data_merged)
+data_merged <- merge(df1, df2, by = "ID", all = TRUE)
+print(data_merged)
+anyNA(data_merged)
+data_no_NA <- data_merged %>%
+  na.omit()
+anyNA(data_no_NA)
+anyDuplicated(data_no_NA)
+data_no_NA <- data_no_NA[!duplicated(data_no_NA),]
+```
+
+### Sum all data by some "day"
+```{r}
+set.seed(123)  
+df <- data.frame(Week = sample(1:52, 500, replace = TRUE),
+                 Hour = sample(1:24, 500, replace = TRUE),
+                 Number = runif(500))
+
+# Operation 1: Find the number of rows with a Week column value of 1
+num_rows <- nrow(df[df$Week == 1, ])
+cat("the number of rows with a Week column value of 1:", num_rows, "\n")
+
+# Operation 2: Summing numbers based on the same week value
+df_sum <- df %>% group_by(Week) %>% summarise(Total = sum(Number))
+
+# Operation 3: Sort the total numbers of each week in descending order and output the first row.
+df_sorted <- df_sum %>% arrange(desc(Total))
+top_row <- head(df_sorted, 1)
+print(top_row)
+df_sum$Week <- as.factor(df_sum$Week)
+ggplot(data = df_sum,
+       mapping = aes(x = Week, y = Total))+
+  geom_col()
+
+```
+
+
+
+
+
+
+
+
+
+
+
