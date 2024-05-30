@@ -1,0 +1,43 @@
+---
+title: "KMEANS"
+output: pdf_document
+date: "2024-05-30"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+install.packages("factoextra")
+library(factoextra)
+library(ggplot2)
+library (cluster)
+```
+
+## Imort the data
+
+```{r}
+data <- iris
+anyNA(data)
+# ALL colomn should be numeric
+data_numeric <- data[, -5]
+fviz_nbclust(data_numeric, kmeans, method = "wss")
+kmeans_result <- kmeans(data_numeric, centers = 3, nstart = 25)
+print(kmeans_result)
+# 将聚类结果添加到原始数据中
+data$Cluster <- as.factor(kmeans_result$cluster)
+
+# 使用 factoextra 包的 fviz_cluster 函数可视化聚类结果
+fviz_cluster(kmeans_result, data = data_numeric,
+             ellipse.type = "convex", 
+             geom = "point",
+             stand = FALSE, 
+             ggtheme = theme_minimal())
+# 构建交叉表比较聚类结果与原始标签
+table(data$Cluster, data$Species)
+```
+
+在 K-means 聚类算法中，nstart 参数表示算法开始运行时随机选择初始聚类中心的不同设置的次数。因为 K-means聚类的结果依赖于初始聚类中心的选择，不同的初始值可能会导致不同的聚类结果。因此，增加 nstart参数的值可以帮助找到更稳定和更优的聚类结果。\
+
+具体解释\
+随机初始化问题：K-means 聚类算法对初始聚类中心的位置非常敏感。不同的初始聚类中心可能导致不同的局部最优解。\
+nstart 参数：nstart 参数告诉算法要运行多少次，每次都从不同的随机初始聚类中心开始。\
+选择最佳结果：在所有运行中，算法会选择总的组内平方和（within-cluster sum of squares, WCSS）最小的一次结果作为最终聚类结果。\
